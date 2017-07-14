@@ -1,10 +1,3 @@
-class DLC
-  def initialize
-    @name = ""
-    @version = 0
-  end
-end
-
 def downloadDLC(url)
   string = pbDownloadToString(url)
   data = pbParseJson(string)

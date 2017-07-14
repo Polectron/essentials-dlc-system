@@ -11,15 +11,16 @@ def downloadDLC(url)
         pbDownloadToFile(step["file"],"tempTilesets.rxdata")
         tempTilesets = pbLoadRxData("tempTilesets.rxdata")
         tilesets[step["id"]] == tempTilesets[step["id"]]
+        save_data(tilesets,"Data/MapInfos.rxdata")
         File.delete("tempTilesets.rxdata")
       end
     end
     
     if step["type"] == "map"
-      filename = step["file"].split("/")[-1]
+      filename = step["name"]
       if["action"] == "add"
-        last = getMapLastOrder()
-        pbDownloadToFile(step["file"], "Data/"+filename)
+        last = getMapLastOrder()+1
+        pbDownloadToFile(step["file"], "Data/"+filename+".rxdata")
         maps = pbLoadRxData("Data/MapInfos")
         map = RPG::MapInfo.new
         map.name = step["name"]
@@ -27,19 +28,19 @@ def downloadDLC(url)
         maps[step["id"]] = map
         save_data(maps,"Data/MapInfos.rxdata")
       elsif["action"] == "update"
-        pbDownloadToFile(step["file"], "Data/"+filename)
+        pbDownloadToFile(step["file"], "Data/"+filename+".rxdata")
       end
     end
     
     if step["type"] == "audio"
       if step["action"] == "add" || step["action"] == "update"
-        pbDownloadToFile(step["file"], "Audio/"+step["name"]+"/"+filename)
+        pbDownloadToFile(step["file"], "Audio/"+step["name"])
       end
     end
     
     if step["type"] == "graphics"
       if step["action"] == "add" || step["action"] == "update"
-        pbDownloadToFile(step["file"], "Graphics/"+step["name"]+"/"+filename)
+        pbDownloadToFile(step["file"], "Graphics/"+step["name"])
       end
     end
     
@@ -50,25 +51,26 @@ def downloadDLC(url)
       end
     end
     
-    if step["type"] == "pbs"
-      if step["action"] == "add" || step["action"] == "update"
-        pbDownloadToFile(step["file"], "PBS/"+filename)
-      end
-    end
+    # if step["type"] == "pbs"
+      # if step["action"] == "add" || step["action"] == "update"
+        # pbDownloadToFile(step["file"], "PBS/"+filename)
+      # end
+    # end
     
     if step["type"] == "data"
       if step["action"] == "add" || step["action"] == "update"
-        pbDownloadToFile(step["file"], "Data/"+filename)
+        pbDownloadToFile(step["file"], "Data/"+step["name"])
       end
     end
     
-    if step["action"] == "set"
-      if step["type"] == "variable"
+    if step["type"] == "variable"
         $game_variables[step["id"]] = step["value"]
-      elsif step["type"] == "switch"
-        $game_switches[step["id"]] = step["value"]
-      end
     end
+    
+    if step["type"] == "switch"
+        game_switches[step["id"]] = step["value"]
+    end
+
     counter += 1
   end
   $DEBUG = true
@@ -90,22 +92,18 @@ def manageDLCs()
   data = pbParseJson(string)
   dlcs = data["dlcs"]
   stopdownload = false
-  loop do
-    commands=[]
-    list = []
-    n = 0
-    
-    for dlc in dlcs
-      #Kernel.pbMessage(_INTL("{1}",dlc["name"]))
-      commands.push(dlc["name"])
-      n += 1
-#    if(dlc["type"] == "map")
-#      Kernel.pbMessage(_INTL("Descargando"))
-#      pbDownloadToFile(dlc["download"], "Data/Map076.rxdata")
-#    end
-    end
+  
+  commands=[]
+  list = []
+  n = 0
 
-    commands.push(_INTL("Salir"))
+  for dlc in dlcs
+    commands.push(dlc["name"])
+    n += 1
+  end
+  commands.push(_INTL("Salir"))
+  
+  loop do
     command=Kernel.pbShowCommands(nil,commands,-1)
     if command>=0 && command<commands.length-1
       command2=Kernel.pbMessage(_INTL("¿Qué quieres hacer con {1}?",
@@ -129,7 +127,7 @@ def manageDLCs()
               $PokemonGlobal.dlcs.push(command)
               Kernel.pbMessage(_INTL("Guardando..."))
               pbSave
-              save_data($PokemonGlobal.dlcs,"Data/dlcs.dat")
+              #save_data($PokemonGlobal.dlcs,"Data/dlcs.dat")
             end
           else
             Kernel.pbMessage("Ya tienes instalado este DLC")
@@ -160,7 +158,7 @@ def pbAddScriptToFile(script,sectionname)
   else
     #scripts.push([rand(100000000),sectionname,Zlib::Deflate.deflate("#{script}\r\n")])
     scripts.push([rand(100000000),sectionname,script])
-    scripts.push([rand(100000000),sectionname,"x\x9c\xf3\xc8\xcfIT\xc8-\xcdK\xc9W\x04\x00\x17\xe7\x03\xe9"])
+    #scripts.push([rand(100000000),sectionname,"x\x9c\xf3\xc8\xcfIT\xc8-\xcdK\xc9W\x04\x00\x17\xe7\x03\xe9"])
   end
   save_data(scripts,"Data/Scripts.rxdata")
 end

@@ -156,8 +156,10 @@ def pbAddScriptToFile(script,sectionname)
     #s[2]=Zlib::Deflate.deflate("#{script}\r\n")
     s[2]=script
   else
+    tempscript = scripts[scripts.size-1]
     #scripts.push([rand(100000000),sectionname,Zlib::Deflate.deflate("#{script}\r\n")])
-    scripts.push([rand(100000000),sectionname,script])
+    scripts[scripts.size-1] = [rand(100000000),sectionname,Zlib::Deflate.deflate("#{script}\r\n")]
+    scripts.push(tempscript)
     #scripts.push([rand(100000000),sectionname,"x\x9c\xf3\xc8\xcfIT\xc8-\xcdK\xc9W\x04\x00\x17\xe7\x03\xe9"])
   end
   save_data(scripts,"Data/Scripts.rxdata")

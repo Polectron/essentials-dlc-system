@@ -8,27 +8,30 @@ def downloadDLC(url)
     if step["type"] == "tileset"
       tilesets = pbLoadRxData("Data/Tilesets")
       if step["action"] == "add" || step["action"] == "update"
-        pbDownloadToFile(step["file"],"tempTilesets.rxdata")
-        tempTilesets = pbLoadRxData("tempTilesets.rxdata")
-        tilesets[step["id"]] == tempTilesets[step["id"]]
-        save_data(tilesets,"Data/MapInfos.rxdata")
-        File.delete("tempTilesets.rxdata")
+        pbDownloadToFile(step["file"],"Data/tempTilesets.rxdata")
+        tempTilesets = pbLoadRxData("Data/tempTilesets")
+        tilesets[step["id"]] = tempTilesets[step["id"]]
+        save_data(tilesets,"Data/Tilesets.rxdata")
+        begin
+          File.delete("Data/tempTilesets.rxdata")
+        rescue SystemCallError
+        end
       end
     end
     
     if step["type"] == "map"
-      filename = step["name"]
-      if["action"] == "add"
+      filename = step["file"].split("/")[-1]
+      if step["action"] == "add"
         last = getMapLastOrder()+1
-        pbDownloadToFile(step["file"], "Data/"+filename+".rxdata")
+        pbDownloadToFile(step["file"], "Data/"+filename)
         maps = pbLoadRxData("Data/MapInfos")
         map = RPG::MapInfo.new
         map.name = step["name"]
         map.order = last
-        maps[step["id"]] = map
+        maps[step["id"].to_i] = map
         save_data(maps,"Data/MapInfos.rxdata")
       elsif["action"] == "update"
-        pbDownloadToFile(step["file"], "Data/"+filename+".rxdata")
+        pbDownloadToFile(step["file"], "Data/"+filename)
       end
     end
     
@@ -74,7 +77,7 @@ def downloadDLC(url)
     counter += 1
   end
   $DEBUG = true
-  pbImportNewMaps
+  #pbImportNewMaps
   msgwindow=Kernel.pbCreateMessageWindow
   pbCompileAllData(true) {|msg| Kernel.pbMessageDisplay(msgwindow,msg,false) }
   Kernel.pbMessageDisplay(msgwindow,_INTL("Se han compilado todos los datos del juego."))
@@ -117,7 +120,7 @@ def manageDLCs()
           if !$PokemonGlobal.dlcs.include?(command)
             for dependency in dlcs[command]["requires"]
               if !$PokemonGlobal.dlcs.include?(dependency)
-                Kernel.pbMessage(_INTL("Es necesario instalar {1} para poder descargar este DLC",dlcs[dependency]["name"]))
+                Kernel.pbMessage(_INTL("Es necesario instalar {1} para poder instalar este DLC",dlcs[dependency]["name"]))
                 stopdownload = true
               end
             end
@@ -127,7 +130,7 @@ def manageDLCs()
               $PokemonGlobal.dlcs.push(command)
               Kernel.pbMessage(_INTL("Guardando..."))
               pbSave
-              #save_data($PokemonGlobal.dlcs,"Data/dlcs.dat")
+              save_data($PokemonGlobal.dlcs,"Data/dlcs.dat")
             end
           else
             Kernel.pbMessage("Ya tienes instalado este DLC")
@@ -154,13 +157,12 @@ def pbAddScriptToFile(script,sectionname)
   s=pbFindScript(scripts,sectionname)
   if s
     #s[2]=Zlib::Deflate.deflate("#{script}\r\n")
-    s[2]=script
+    s[2]=script.unpack("m")[0]
   else
     tempscript = scripts[scripts.size-1]
     #scripts.push([rand(100000000),sectionname,Zlib::Deflate.deflate("#{script}\r\n")])
-    scripts[scripts.size-1] = [rand(100000000),sectionname,Zlib::Deflate.deflate("#{script}\r\n")]
+    scripts[scripts.size-1] = [rand(100000000),sectionname,script.unpack("m")[0]]
     scripts.push(tempscript)
-    #scripts.push([rand(100000000),sectionname,"x\x9c\xf3\xc8\xcfIT\xc8-\xcdK\xc9W\x04\x00\x17\xe7\x03\xe9"])
   end
   save_data(scripts,"Data/Scripts.rxdata")
 end

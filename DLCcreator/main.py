@@ -2,6 +2,7 @@ import zlib
 import sys
 import pyperclip
 import json
+import base64
 
 from PyQt5.QtWidgets import QDialog, QMainWindow, QApplication
 from dlceditor import Ui_MainWindow
@@ -54,6 +55,8 @@ class DLCEditor(QMainWindow):
 
         self.ui.tabWidget
 
+        print(self.ui.comboType.model().item(PBS).setEnabled(False))
+
         self.show()
 
     def changedTab(self):
@@ -66,7 +69,7 @@ class DLCEditor(QMainWindow):
         pyperclip.copy(self.ui.plainTextEdit.toPlainText())
 
     def addStep(self):
-        print(self.typeIndex, self.actionIndex)
+        #print(self.typeIndex, self.actionIndex)
 
         if self.typeIndex == MAP:
             if self.actionIndex == ADD:
@@ -74,7 +77,7 @@ class DLCEditor(QMainWindow):
             elif self.actionIndex == UPDATE:
                 self.steps["steps"].append({"action":"update","type":"map","file":self.ui.fileURL.text(),"id":self.ui.idBox.value()})
         elif self.typeIndex == VARIABLE:
-            print(self.actionIndex)
+            #print(self.actionIndex)
             if self.actionIndex == SET:
                 value = None
                 if self.ui.valueTabs.currentIndex() == BOOL:
@@ -116,7 +119,9 @@ class DLCEditor(QMainWindow):
 
     def generateScript(self):
         compressed = zlib.compress(self.ui.scriptText.toPlainText().encode("UTF-8"))
-        pyperclip.copy(compressed.__str__()[2:-1])
+        compressed = base64.b64encode(compressed)
+        #print(compressed)
+        pyperclip.copy(compressed.decode("UTF-8"))
 
     def updateForm(self):
         self.typeIndex = self.ui.comboType.currentIndex()
